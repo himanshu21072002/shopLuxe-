@@ -1,7 +1,10 @@
+// ignore_for_file: must_be_immutable
+
+import 'package:equatable/equatable.dart';
 import 'package:shop_with_me/data/models/cart/cart_item_model.dart';
 import 'package:shop_with_me/data/models/user/user_model.dart';
 
-class OrderModel {
+class OrderModel extends Equatable{
   String? sId;
   UserModel? user;
   List<CartItemModel>? items;
@@ -48,4 +51,7 @@ class OrderModel {
 
     return data;
   }
+
+  @override
+  List<Object?> get props=>[sId];
 }

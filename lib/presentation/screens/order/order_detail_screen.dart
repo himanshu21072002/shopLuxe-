@@ -1,12 +1,16 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_with_me/data/models/order/order_model.dart';
 import 'package:shop_with_me/logic/cubits/cart_cubit/cart_cubit.dart';
 import 'package:shop_with_me/logic/cubits/cart_cubit/cart_state.dart';
 import 'package:shop_with_me/logic/cubits/order_cubit/order_cubit.dart';
 import 'package:shop_with_me/logic/cubits/user_cubit/user_cubit.dart';
+import 'package:shop_with_me/logic/services/razorpay_services.dart';
 import 'package:shop_with_me/presentation/screens/order/order_placed_screen.dart';
 import 'package:shop_with_me/presentation/screens/order/provider/order_detail_provider.dart';
 import 'package:shop_with_me/presentation/widgets/primary_button.dart';
@@ -137,18 +141,41 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             PrimaryButton(
               text: 'Place Order',
               onPressed: () async {
-                bool success = await BlocProvider.of<OrderCubit>(context)
-                    .createOrder(
+                OrderModel? newOrder =
+                    await BlocProvider.of<OrderCubit>(context).createOrder(
                         items: BlocProvider.of<CartCubit>(context).state.items,
                         paymentMethod: Provider.of<OrderDetailProvider>(context,
                                 listen: false)
                             .paymentMethod
                             .toString());
-                if (success) {
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                  Navigator.pushNamed(
-                      context, OrderPlacedScreen.routeName);
+                if (newOrder == null) {
+                  return;
                 }
+                if (newOrder.status == "order-placed") {
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                  Navigator.pushNamed(context, OrderPlacedScreen.routeName);
+                }
+                if (newOrder.status == "payment-pending") {
+                  await RazorPayServices.checkoutOrder(newOrder,
+                      onSuccess: (response) async {
+                    newOrder.status = "order_placed";
+                    bool success = await BlocProvider.of<OrderCubit>(context)
+                        .updateOrder(
+                            newOrder, response.paymentId, response.signature);
+                    if (!success) {
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   const SnackBar(content: Text("can't update the order")),
+                      // );
+                      log("can't update the order");
+                      return;
+                    }
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                    Navigator.pushNamed(context, OrderPlacedScreen.routeName);
+                  }, onFailure: (response) {
+                    log("payment failed!");
+                  });
+                }
+        log("idhar aa gaya");
               },
             )
           ],

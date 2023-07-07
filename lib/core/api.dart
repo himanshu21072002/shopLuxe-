@@ -3,7 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
-const String BASE_URL = "http://192.168.145.170:8000/api";
+const String BASE_URL = "https://shopluxe.onrender.com/api";
 const Map<String, dynamic> DEFAULT_HEADERS = {
   'Content-Type': 'application/json'
 };
