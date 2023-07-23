@@ -184,8 +184,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       await RazorPayServices.checkoutOrder(newOrder,
                           onSuccess: (response) async {
                         newOrder.status = "order_placed";
-                        bool success =
-                            await BlocProvider.of<OrderCubit>(context)
+                        bool success = await BlocProvider.of<OrderCubit>(context)
                                 .updateOrder(newOrder, response.paymentId,
                                     response.signature);
                         if (!success) {
